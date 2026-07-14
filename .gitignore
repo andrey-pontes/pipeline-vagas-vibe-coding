@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+part.md
 
 # Translations
 *.mo
@@ -70,6 +71,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+.claude/
 
 # PyBuilder
 .pybuilder/
@@ -216,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Dados do projeto (export LinkedIn e intermediarios)
+data/
