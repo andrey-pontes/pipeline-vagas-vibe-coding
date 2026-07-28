@@ -220,7 +220,7 @@ O corpus de vagas não é redistribuído: as descrições são conteúdo de terc
 
 1. Viés de seleção. As vagas vieram de nove buscas por termos de IA; o estudo descreve o perfil das vagas de IA no LinkedIn Brasil, não a penetração de IA no mercado de desenvolvimento como um todo.
 2. A variável central é a de menor concordância entre modelos (κ = 0,53).
-3. A arbitragem e a auditoria foram feitas por LLM, não por leitura humana. Erros correlacionados entre os quatro modelos são invisíveis a este desenho. A auditoria humana por amostra das decisões do juiz permanece pendente.
+3. A arbitragem das 266 divergências foi feita por modelo juiz, não por leitura humana integral. As decisões do juiz foram auditadas pelo autor por leitura manual de 84 vagas; a planilha dessa auditoria não está versionada aqui, junto com o restante dos dados. Fora da amostra auditada, erros correlacionados entre os quatro modelos permanecem invisíveis a este desenho.
 4. Consenso não é acerto: cerca de 16% das decisões de campo em vagas unânimes foram contestadas na auditoria.
 5. Normalização imperfeita das listas (`rag` e `retrieval-augmented generation` contados em separado; vazamento de categoria em `ferramentas_ia_codigo`, corrigido na análise por lista curada).
 6. Ruído de coleta: cerca de 2% das vagas não são de desenvolvimento de software.
