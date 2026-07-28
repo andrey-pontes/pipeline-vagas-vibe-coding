@@ -10,37 +10,44 @@ A extração é feita por LLM e tratada como anotação sujeita a erro: três mo
 | Idiomas | 167 português, 116 inglês |
 | Termos de busca | 9 (Engenheiro de IA, LLM, Desenvolvedor de IA, Eng. de Aprendizado de Máquina, IA Generativa, Vibe Coding, Engenharia de Prompt, RAG, Agentes de IA) |
 | Extratores | 3 modelos de pesos abertos, 3 fornecedores |
-| Arbitragem | 1 modelo juiz, 4º fornecedor |
-| Custo de reprodução | < US$ 0,20 (extração) + ~US$ 2 (arbitragem) |
+| Arbitragem | `anthropic/claude-sonnet-5` como modelo juiz, 4º fornecedor |
 | Runtime | Python 3.12, Jupyter |
 
 ## Arquitetura
 
-```
-data/raw/merged_job_posts.csv
-        │
-        ├─[01]─> data/processed/vagas_limpas.parquet
-        │              │
-        │              ├─[02]─> data/processed/ngramas_requisitos.csv
-        │              │
-        │              └─[03]─> data/processed/extracao.sqlite  (modelo principal)
-        │                              │
-        │                              └─> data/processed/vagas_extraidas.parquet
-        │                                          │
-        │        [04] ─────────────────────────────┤ reextração pelos 2 validadores
-        │                                          │ (mesmo SQLite, PK (url_base, modelo))
-        │                                          ▼
-        │                          data/validation/divergencias_arbitragem.xlsx
-        │                                          │
-        │        arbitrar_divergencias.py ─────────┤ juiz LLM -> arbitragem_juiz.jsonl
-        │        aplicar_arbitragem.py ────────────┤ preenche valor_correto + arbitrado_por
-        │                                          ▼
-        │                          data/processed/vagas_validadas.parquet
-        │                                          │
-        │                            ┌─────────────┴──────────────┐
-        │                          [05] análise              [06] avaliação
-        │                                                          │
-        └──────────────────────────────> Postgres (opcional): tabelas vagas, vagas_skills
+```mermaid
+flowchart TD
+    raw[("data/raw/merged_job_posts.csv")]
+    limpas[("vagas_limpas.parquet")]
+    ngramas[("ngramas_requisitos.csv")]
+    sqlite[("extracao.sqlite<br/>PK url_base + modelo")]
+    extraidas[("vagas_extraidas.parquet")]
+    divergencias[("divergencias_arbitragem.xlsx")]
+    juizjsonl[("arbitragem_juiz.jsonl")]
+    validadas[("vagas_validadas.parquet")]
+    postgres[("Postgres: vagas, vagas_skills<br/>opcional")]
+
+    n01["01 preparação"]
+    n02["02 exploração"]
+    n03["03 extração<br/>modelo principal"]
+    n04["04 validação<br/>reextração pelos 2 validadores"]
+    n05["05 análise"]
+    n06["06 avaliação"]
+    arbitrar["arbitrar_divergencias.py<br/>modelo juiz"]
+    aplicar["aplicar_arbitragem.py<br/>valor_correto + arbitrado_por"]
+
+    raw --> n01 --> limpas
+    limpas --> n02 --> ngramas
+    limpas --> n03 --> sqlite --> extraidas
+    extraidas --> n04
+    n04 <--> sqlite
+    n04 --> divergencias --> arbitrar --> juizjsonl --> aplicar --> divergencias
+    divergencias --> n04
+    n04 --> validadas
+    n04 --> postgres
+    validadas --> n05
+    validadas --> n06
+    sqlite --> n06
 ```
 
 O Parquet é o formato de intercâmbio entre etapas. O SQLite serve de checkpoint da extração: a chave primária `(url_base, modelo)` torna qualquer etapa reexecutável sem repetir chamadas já pagas.
@@ -147,7 +154,7 @@ Modelos usados, configuráveis no topo dos notebooks 03, 04 e 06:
 | Validador 2 | `google/gemma-4-31b-it` | 0,12 / 0,35 |
 | Juiz (arbitragem) | `anthropic/claude-sonnet-5` | — |
 
-Os três extratores são de pesos abertos: o estudo é replicável por menos de US$ 0,20 em API ou sem custo com os modelos rodando localmente. `extra_body={"provider": {"require_parameters": True}}` restringe o roteamento da OpenRouter a provedores que suportam structured outputs.
+Os três extratores são de pesos abertos, o que permite reproduzir a extração pela API ou com os modelos rodando localmente. `extra_body={"provider": {"require_parameters": True}}` restringe o roteamento da OpenRouter a provedores que suportam structured outputs.
 
 ## Execução
 
